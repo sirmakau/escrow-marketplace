@@ -199,6 +199,10 @@ export async function handleStkCallback(callback: StkCallback) {
  * Double-entry: platform_float -> payee_wallet -> payee_bank/m-pesa
  */
 export async function releasePayment(orderId: string, userId: string) {
+  if (!config.isB2cEnabled) {
+    throw new AppError('PAYMENT_NOT_CONFIGURED', 'B2C payouts are not configured', 503);
+  }
+
   return withTx(async (tx) => {
     const [order] = await tx.select().from(schema.orders)
       .where(eq(schema.orders.id, orderId))
@@ -312,6 +316,10 @@ export async function releasePayment(orderId: string, userId: string) {
  * Refund the payer (dispute resolution). Funds flow back to payer's M-Pesa.
  */
 export async function refundPayer(orderId: string, resolvedBy: string) {
+  if (!config.isB2cEnabled) {
+    throw new AppError('PAYMENT_NOT_CONFIGURED', 'B2C payouts are not configured', 503);
+  }
+
   return withTx(async (tx) => {
     const [order] = await tx.select().from(schema.orders)
       .where(eq(schema.orders.id, orderId))

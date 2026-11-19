@@ -64,6 +64,29 @@ function baseUrl(): string {
   return 'https://api.safaricom.co.ke';
 }
 
+function requireStkConfig() {
+  const { MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, MPESA_PASSKEY } = config;
+  if (!config.isStkPushEnabled || !MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET || !MPESA_SHORTCODE || !MPESA_PASSKEY) {
+    throw new AppError('PAYMENT_NOT_CONFIGURED', 'M-Pesa STK Push is not configured', 503);
+  }
+
+  return { consumerKey: MPESA_CONSUMER_KEY, consumerSecret: MPESA_CONSUMER_SECRET, shortcode: MPESA_SHORTCODE, passkey: MPESA_PASSKEY };
+}
+
+export function generateB2cSecurityCredential(
+  password: string,
+  certificatePem?: string,
+  certificatePath?: string,
+): string {
+  const certificate = certificatePem
+    ? crypto.createPublicKey(certificatePem)
+    : new crypto.X509Certificate(fs.readFileSync(certificatePath!)).publicKey;
+  return crypto.publicEncrypt(
+    { key: certificate, padding: crypto.constants.RSA_PKCS1_PADDING },
+    Buffer.from(password, 'utf8'),
+  ).toString('base64');
+}
+
 // ─── Mock Daraja ────────────────────────────────────────────────────���─────
 class MockDaraja {
   private pendingStk: Map<string, { amount: number; phone: string; orderId: string }> = new Map();
@@ -110,6 +133,9 @@ class MockDaraja {
   }
 
   async b2c(req: B2CRequest): Promise<B2CResponse> {
+    if (!config.isB2cEnabled) {
+      throw new AppError('PAYMENT_NOT_CONFIGURED', 'B2C payouts are not configured', 503);
+    }
     return {
       ConversationID: 'mock-CONV-' + generateId().slice(0, 8),
       OriginatorConversationID: 'mock-ORIG-' + generateId().slice(0, 8),
@@ -132,7 +158,8 @@ class LiveDaraja {
       return this.accessToken;
     }
 
-    const auth = Buffer.from(`${config.MPESA_CONSUMER_KEY}:${config.MPESA_CONSUMER_SECRET}`).toString('base64');
+    const { consumerKey, consumerSecret } = requireStkConfig();
+    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
     const res = await fetch(`${baseUrl()}/oauth/v1/generate?grant_type=client_credentials`, {
       method: 'GET',
       headers: { Authorization: `Basic ${auth}` },
@@ -149,8 +176,9 @@ class LiveDaraja {
   }
 
   private generatePassword(): string {
+    const { shortcode, passkey } = requireStkConfig();
     const timestamp = this.timestamp();
-    const raw = config.MPESA_SHORTCODE + config.MPESA_PASSKEY + timestamp;
+    const raw = shortcode + passkey + timestamp;
     return Buffer.from(raw).toString('base64');
   }
 
@@ -165,35 +193,34 @@ class LiveDaraja {
   }
 
   private securityCredential(): string {
-    // In sandbox, the initiator password acts as the credential
-    if (config.isSandbox) {
-      return config.MPESA_INITIATOR_PASSWORD || '';
+    if (!config.isB2cEnabled || !config.MPESA_INITIATOR_PASSWORD) {
+      throw new AppError('PAYMENT_NOT_CONFIGURED', 'B2C payouts are not configured', 503);
     }
-    // Production: encrypt with Safaricom public cert. Prefer PEM supplied via
-    // env (Render) and fall back to a certificate file on disk.
+
     try {
-      const cert = config.MPESA_CERT_PEM ?? fs.readFileSync(config.MPESA_CERT_PATH, 'utf-8');
-      const publicKey = crypto.createPublicKey(cert);
-      const encrypted = crypto.publicEncrypt(publicKey, Buffer.from(config.MPESA_INITIATOR_PASSWORD || ''));
-      return encrypted.toString('base64');
+      return generateB2cSecurityCredential(
+        config.MPESA_INITIATOR_PASSWORD,
+        config.MPESA_CERT_PEM,
+        config.MPESA_CERT_PATH,
+      );
     } catch {
-      logger.warn('Could not read certificate, falling back to initiator password');
-      return config.MPESA_INITIATOR_PASSWORD || '';
+      throw new AppError('PAYMENT_NOT_CONFIGURED', 'B2C payouts are not configured', 503);
     }
   }
 
   async stkPush(req: StkPushRequest): Promise<StkPushResponse> {
     const token = await this.getToken();
+    const { shortcode } = requireStkConfig();
     const callbackUrl = `${config.MPESA_CALLBACK_BASE_URL}/api/payments/mpesa/stk-callback`;
 
     const body = {
-      BusinessShortCode: config.MPESA_SHORTCODE,
+      BusinessShortCode: shortcode,
       Password: this.generatePassword(),
       Timestamp: this.timestamp(),
       TransactionType: 'CustomerPayBillOnline',
       Amount: (req.amount / 100).toFixed(0),  // API takes shillings as string
       PartyA: req.phone.replace('+', ''),
-      PartyB: config.MPESA_SHORTCODE,
+      PartyB: shortcode,
       PhoneNumber: req.phone.replace('+', ''),
       CallBackURL: callbackUrl,
       AccountReference: req.accountReference || req.orderId.slice(0, 12),
@@ -220,8 +247,9 @@ class LiveDaraja {
 
   async stkQuery(checkoutRequestId: string): Promise<StkCallback> {
     const token = await this.getToken();
+    const { shortcode } = requireStkConfig();
     const body = {
-      BusinessShortCode: config.MPESA_SHORTCODE,
+      BusinessShortCode: shortcode,
       Password: this.generatePassword(),
       Timestamp: this.timestamp(),
       CheckoutRequestID: checkoutRequestId,
@@ -250,6 +278,10 @@ class LiveDaraja {
   }
 
   async b2c(req: B2CRequest): Promise<B2CResponse> {
+    if (!config.isB2cEnabled) {
+      throw new AppError('PAYMENT_NOT_CONFIGURED', 'B2C payouts are not configured', 503);
+    }
+    const { shortcode } = requireStkConfig();
     const token = await this.getToken();
     const callbackUrl = `${config.MPESA_CALLBACK_BASE_URL}/api/payments/mpesa/b2c-callback`;
     const timeoutUrl = `${config.MPESA_CALLBACK_BASE_URL}/api/payments/mpesa/b2c-timeout`;
@@ -259,7 +291,7 @@ class LiveDaraja {
       SecurityCredential: this.securityCredential(),
       CommandID: 'BusinessPayment',
       Amount: (req.amount / 100).toFixed(0),
-      PartyA: config.MPESA_SHORTCODE,
+      PartyA: shortcode,
       PartyB: req.phone.replace('+', ''),
       Remarks: req.remarks || 'Escrow payout',
       QueueTimeOutURL: timeoutUrl,

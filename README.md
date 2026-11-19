@@ -307,7 +307,7 @@ selects `MPESA_PRODUCTION_*` only when `MPESA_MODE=production`.
 Each environment still needs a public HTTPS callback URL. If sandbox and
 production run as separate Render services, set `MPESA_CALLBACK_BASE_URL` to each
 service's own URL. Production certificate encryption uses
-`MPESA_PRODUCTION_CERT_PEM` when set, otherwise `MPESA_CERT_PATH`.
+`MPESA_PRODUCTION_CERT_PEM` when set, otherwise `MPESA_PRODUCTION_CERT_PATH`.
 
 Auto-release timers run in `server/src/workers/index.ts`, which is a separate
 process. On Render, add a background worker with start command

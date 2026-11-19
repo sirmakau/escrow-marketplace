@@ -27,6 +27,7 @@ export type AppErrorCode =
   | 'DUPLICATE_REQUEST'
   | 'INSUFFICIENT_FUNDS'
   | 'PAYMENT_FAILED'
+  | 'PAYMENT_NOT_CONFIGURED'
   | 'INTERNAL_ERROR';
 
 export const logger = pino({

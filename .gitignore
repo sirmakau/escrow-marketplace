@@ -11,6 +11,9 @@ client/.env
 .env
 .env.local
 .env.*.local
+server/certs/
+*.cer
+*.pem
 
 # Logs and local noise
 *.log
