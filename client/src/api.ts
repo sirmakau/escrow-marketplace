@@ -1,8 +1,10 @@
 /**
- * API client for the JSON API.
+ * Central API service layer.
  *
- * Unwraps the `{ data }` envelope, refreshes expired access tokens once on 401,
- * and records non-quiet requests in the activity log.
+ * - One configurable base URL (`client/.env` -> VITE_API_BASE_URL).
+ * - Unwraps the `{ data }` envelope and throws typed ApiErrors.
+ * - Refreshes an expired access token once, then clears the session.
+ * - Financial POSTs can carry an Idempotency-Key.
  */
 
 import type { Session, Tokens, User } from './types';
@@ -16,7 +18,7 @@ import {
   upsertSession,
 } from './store';
 
-/** Optional API origin from client/.env; empty means same origin/proxy. */
+/** Optional API origin; empty means same origin / Vite proxy. */
 export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
 
 export function apiUrl(path: string): string {
@@ -44,6 +46,7 @@ interface RequestOptions {
   quiet?: boolean;
   retry?: boolean;
   session?: Session | null;
+  idempotencyKey?: string;
 }
 
 async function refreshSession(session: Session): Promise<boolean> {
@@ -65,24 +68,24 @@ async function refreshSession(session: Session): Promise<boolean> {
 }
 
 export async function api<T = unknown>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const {
-    method = 'GET',
-    body,
-    auth = true,
-    quiet = false,
-    retry = true,
-  } = opts;
+  const { method = 'GET', body, auth = true, quiet = false, retry = true, idempotencyKey } = opts;
   const session = opts.session !== undefined ? opts.session : activeSession();
 
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (auth && session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
 
-  const res = await fetch(apiUrl(path), {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(apiUrl(path), {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new ApiError('Network error. Check your connection and try again.', 0, 'NETWORK_ERROR');
+  }
 
   let payload: any = null;
   const text = await res.text();
@@ -102,6 +105,10 @@ export async function api<T = unknown>(path: string, opts: RequestOptions = {}):
     if (res.status === 401 && auth && retry && session?.refreshToken) {
       if (await refreshSession(session)) {
         return api<T>(path, { ...opts, retry: false, quiet });
+      }
+      removeSession(session.phone);
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign('/login?expired=1');
       }
     }
     const error = payload?.error;
@@ -124,19 +131,9 @@ export function normalisePhone(input: string): string {
   return raw;
 }
 
-export async function signIn(phone: string, password: string): Promise<User> {
-  const normalised = normalisePhone(phone);
-  addLog('info', `POST /api/auth/login (${normalised})`);
-
-  const tokens = await api<Tokens>('/api/auth/login', {
-    method: 'POST',
-    body: { phone: normalised, password },
-    auth: false,
-    quiet: true,
-  });
-
+async function establishSession(phone: string, tokens: Tokens): Promise<User> {
   const session: Session = {
-    phone: normalised,
+    phone,
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
     user: null,
@@ -144,8 +141,36 @@ export async function signIn(phone: string, password: string): Promise<User> {
   const user = await api<User>('/api/users/me', { session, quiet: true });
   session.user = user;
   upsertSession(session);
+  return user;
+}
 
+export async function signIn(phone: string, password: string): Promise<User> {
+  const normalised = normalisePhone(phone);
+  const tokens = await api<Tokens>('/api/auth/login', {
+    method: 'POST',
+    body: { phone: normalised, password },
+    auth: false,
+    quiet: true,
+  });
+  const user = await establishSession(normalised, tokens);
   addLog('ok', `Signed in as ${user.displayName}`);
+  return user;
+}
+
+export async function register(input: {
+  phone: string;
+  password: string;
+  displayName: string;
+}): Promise<User> {
+  const normalised = normalisePhone(input.phone);
+  const tokens = await api<Tokens>('/api/auth/register', {
+    method: 'POST',
+    body: { phone: normalised, password: input.password, displayName: input.displayName },
+    auth: false,
+    quiet: true,
+  });
+  const user = await establishSession(normalised, tokens);
+  addLog('ok', `Account created for ${user.displayName}`);
   return user;
 }
 
@@ -158,23 +183,28 @@ export async function signOut(session: Session): Promise<void> {
       quiet: true,
     });
   } catch {
-    /* a local sign-out is enough */
+    /* local sign-out is enough */
   }
   removeSession(session.phone);
   addLog('info', `Signed out ${session.user?.displayName || session.phone}`);
 }
 
-export async function refreshProfile(): Promise<void> {
+export async function refreshProfile(): Promise<User | null> {
   const session = activeSession();
-  if (!session) return;
+  if (!session) return null;
   try {
     const user = await api<User>('/api/users/me', { session, quiet: true });
     updateSessionUser(session.phone, user);
+    return user;
   } catch {
-    /* keep the last known profile */
+    return null;
   }
 }
 
 export function sessionFor(phone: string | null): Session | null {
   return getState().sessions.find((s) => s.phone === phone) ?? null;
+}
+
+export function newIdempotencyKey(): string {
+  return crypto.randomUUID();
 }

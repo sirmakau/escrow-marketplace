@@ -129,20 +129,34 @@ SYSTEM → releasePayment()
 - PostgreSQL (Neon or local)
 - npm
 
+The repository has two independent packages, each with its own `package.json`,
+`node_modules` and `.env`:
+
+```
+client/   React + Vite application (:5173)
+server/   Express API, workers, migrations (:3000)
+```
+
 ### Setup
 
+Server (first terminal):
+
 ```bash
-git clone <repo>
-cd escrow-marketplace
-
-cp server/.env.example server/.env
-cp client/.env.example client/.env
-# Edit server/.env with your values (DATABASE_URL, secrets, etc.)
-
+cd server
 npm install
-npm run migrate    # Push schema to database
-npm run seed       # Create test users
-npm run dev        # Start development server (tsx watch)
+cp .env.example .env     # Edit DATABASE_URL, JWT secrets, M-Pesa settings
+npm run migrate          # Push schema to database
+npm run seed             # Create test users
+npm run dev              # API on :3000 (tsx watch)
+```
+
+Client (second terminal):
+
+```bash
+cd client
+npm install
+cp .env.example .env     # VITE_API_BASE_URL can stay empty for the dev proxy
+npm run dev              # App on :5173
 ```
 
 ### Test Users (after seed)
@@ -156,22 +170,37 @@ npm run dev        # Start development server (tsx watch)
 
 ### Running
 
+In `server/`:
+
 ```bash
 npm run dev          # API server on :3000
-npm run dev:client   # React test console on :5173 (proxies /api to :3000)
 npm run worker       # Background worker process
 npm run demo         # Concurrency demo (service-layer + transition table)
+npm run migrate      # Push the Drizzle schema
+npm run seed         # Create the test users
 npm run test         # Unit tests (21 passing)
-npm run test:watch   # Watch mode
-npm run build        # Build the client and compile the server
+npm run build        # Compile TypeScript to server/dist
+```
+
+In `client/`:
+
+```bash
+npm run dev          # Vite dev server on :5173 (proxies /api and /health)
+npm run build        # Production bundle in client/dist
+npm run preview      # Preview the built bundle
+npm run typecheck    # TypeScript check
 ```
 
 ### Frontend
 
-The test console is a React + Vite app in `client/`. In development, run
-`npm run dev` and `npm run dev:client` together and open http://localhost:5173.
-In production, `npm run build` writes the bundle to `client/dist`, which the
-Express server serves directly (with SPA fallback) at http://localhost:3000.
+The application is a React + Vite client in `client/` with role-aware navigation:
+dashboard, escrows, guided create flow, escrow details with timeline and M-Pesa
+funding, wallet, transactions, disputes, notifications, profile/verification,
+help, and an admin workspace (users, disputes, ledger, audit log).
+
+Run `server` and `client` independently. In development, open http://localhost:5173.
+In production, `cd client && npm run build` writes the bundle to `client/dist`,
+which the Express server serves directly (with SPA fallback) at http://localhost:3000.
 
 Each app has its own env file: `server/.env` (database, JWT, M-Pesa) and
 `client/.env` (only public `VITE_*` values, such as `VITE_API_BASE_URL`).
@@ -219,8 +248,9 @@ Each app has its own env file: `server/.env` (database, JWT, M-Pesa) and
 3. Upload your Safaricom production certificate to `certs/safaricom.cer`
 4. Set long random `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`
 5. Set `NODE_ENV=production`
-6. Run `npm run build` and start with `node dist/index.js`
-7. Run the worker as a separate process: `node dist/workers/index.js`
+6. Build both apps: `cd client && npm run build`, then `cd ../server && npm run build`
+7. Start the API with `npm start` from `server/` (it serves `client/dist`)
+8. Run the worker as a separate process: `node server/dist/workers/index.js`
 
 ## License
 

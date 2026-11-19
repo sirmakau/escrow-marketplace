@@ -12,6 +12,9 @@ export interface User {
   displayName: string;
   role: string;
   kycTier: number;
+  kycIdNumber?: string | null;
+  kycVerifiedAt?: string | null;
+  createdAt?: string;
   wallet?: Wallet | null;
 }
 
@@ -35,32 +38,55 @@ export interface Order {
   state: string;
   version: number;
   termsVersion: number;
+  currentTermsHash?: string | null;
   priceCents: number | null;
+  feeCents: number | null;
   calloutFeeCents: number | null;
   deliveryMode: string | null;
+  fundingDeadline: string | null;
+  reviewDeadline: string | null;
+  paidAt: string | null;
+  releasedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TermsVersion {
+  id?: string;
   version?: number;
+  hash?: string;
   priceCents: number;
   calloutFeeCents: number;
   scopeDescription: string;
   deliveryMode: string;
   extraTerms?: string | null;
+  createdBy?: string;
+  createdAt?: string;
+}
+
+export interface Acceptance {
+  id: string;
+  orderId: string;
+  userId: string;
+  termsVersion: number;
+  acceptedAt: string;
 }
 
 export interface OrderDetail extends Order {
   terms?: TermsVersion[];
+  acceptances?: Acceptance[];
 }
 
 export interface Dispute {
   id: string;
   orderId: string;
+  openedBy: string;
   reason: string;
   description: string;
   status: string;
+  resolution?: string | null;
+  resolvedAt?: string | null;
+  createdAt?: string;
 }
 
 export interface DashboardStats {
@@ -68,4 +94,34 @@ export interface DashboardStats {
   orders: number;
   disputes: number;
   revenue: number;
+}
+
+export interface LedgerEntry {
+  id: string;
+  transactionId: string;
+  orderId: string | null;
+  fromAccount: string;
+  toAccount: string;
+  amountCents: number;
+  reason: string;
+  refType?: string | null;
+  refId?: string | null;
+  createdAt: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  tableName: string;
+  recordId: string | null;
+  action: string;
+  actorId: string | null;
+  createdAt: string;
+  newValues?: unknown;
+}
+
+export interface Paged<T> {
+  items: T[];
+  page?: number;
+  limit?: number;
+  total?: number;
 }

@@ -1,0 +1,435 @@
+# Build a Production-Ready Escrow Marketplace — UI/UX Design
+
+Design a modern, trustworthy, responsive escrow marketplace for the Kenyan market. The platform connects buyers and sellers and protects payments by holding funds in escrow until agreed conditions are fulfilled.
+
+The product should feel like a serious financial technology platform: trustworthy, transparent, secure, modern and easy to use.
+
+**Primary market:** Kenya  
+**Currency:** KES (Kenyan Shillings)  
+**Payment method:** M-Pesa  
+**Product type:** Two-sided escrow marketplace  
+**Design priority:** Desktop-first, fully responsive on mobile.
+
+## 1. Visual identity and design direction
+
+Create a premium fintech aesthetic.
+
+- Dark navy / charcoal primary backgrounds.
+- Clean white and subtle off-white surfaces.
+- Emerald green for successful payments and completed transactions.
+- Amber for pending actions.
+- Red for failed payments and critical warnings.
+- Subtle gradients, refined shadows and rounded cards.
+- Excellent typography and generous spacing.
+- Minimal but meaningful animations.
+- Use Lucide-style icons.
+- Avoid excessive glassmorphism, unnecessary gradients and generic dashboard templates.
+
+The design should communicate financial trust, accountability and transparency.
+
+## 2. Application structure
+
+Create the following main navigation:
+
+- Dashboard
+- My Escrows
+- Create Escrow
+- Wallet
+- Transactions
+- Disputes
+- Notifications
+- Profile & Verification
+- Help & Support
+
+Include a user profile menu and notification indicator.
+
+The application has three roles:
+
+1. User — buyer or seller.
+2. Support — handles customer support and assists with disputes.
+3. Admin — oversees platform operations, users, payments and financial activity.
+
+Show navigation and permissions according to the authenticated user's role.
+
+## 3. Authentication screens
+
+Design:
+
+- Sign up
+- Login
+- Phone number verification
+- Password reset
+- Session-expired screen
+
+Registration fields should correspond to the database:
+
+- Phone number
+- Display name
+- Password
+
+Profile information should support KYC tiers 0, 1 and 2.
+
+Never expose password hashes, refresh tokens or private KYC identification data in the interface.
+
+## 4. User dashboard
+
+Create a personalized dashboard with:
+
+**Summary cards**
+- Available wallet balance
+- Held wallet balance
+- Active escrows
+- Completed transactions
+- Pending actions
+
+**Dashboard sections**
+- Recent transactions
+- Active escrow agreements
+- Pending payments
+- Upcoming deadlines
+- Recent notifications
+
+Show the difference between available funds and funds held in escrow.
+
+Never calculate financial balances from frontend-only transaction assumptions. Display balances returned by the backend.
+
+## 5. Escrow marketplace
+
+Create an escrow listing page with:
+
+- Search
+- Filters
+- Status tabs
+- Date filtering
+- Pagination
+- Clear transaction status badges
+
+Each escrow card should show:
+
+- Escrow reference
+- Buyer
+- Seller
+- Amount in KES
+- Platform fee
+- Callout fee, where applicable
+- Current status
+- Creation date
+- Funding deadline
+- Review deadline
+
+Possible states should reflect the backend order lifecycle. Use these as initial presentation labels:
+
+- Draft
+- Awaiting acceptance
+- Awaiting funding
+- Funded
+- In progress
+- Awaiting delivery confirmation
+- Under review
+- Disputed
+- Released
+- Refunded
+- Cancelled
+
+Do not assume every label corresponds to an implemented database state. Map actual state values from the API.
+
+## 6. Create escrow workflow
+
+Build a guided multi-step creation experience.
+
+**Step 1 — Participants**
+- Buyer / payer
+- Seller / payee
+
+**Step 2 — Agreement**
+- Transaction title
+- Scope description
+- Price
+- Callout fee
+- Delivery mode
+- Additional terms
+
+**Step 3 — Review**
+- Transaction amount
+- Platform fee
+- Total payable
+- Terms summary
+
+**Step 4 — Confirmation**
+- Confirm escrow details
+- Submit escrow creation request
+
+Display clear explanations of who pays, who receives funds and when funds are released.
+
+Support versioned terms. If terms change, both parties must accept the new version before the agreement proceeds.
+
+Show acceptance status separately for each participant.
+
+## 7. Escrow details page
+
+This is one of the most important screens.
+
+Create a comprehensive transaction detail page with:
+
+- Escrow reference
+- Buyer and seller details
+- Transaction amount
+- Fee breakdown
+- Agreement and terms version
+- Terms hash/reference
+- Acceptance status
+- Payment status
+- Delivery status
+- Funding deadline
+- Review deadline
+- Timeline of events
+
+Create a prominent transaction timeline:
+
+1. Escrow created.
+2. Terms accepted.
+3. Buyer funds escrow.
+4. Payment confirmed.
+5. Seller delivers.
+6. Buyer reviews delivery.
+7. Funds released or refunded.
+
+Actions must be conditional on the backend transaction state and authenticated user's role.
+
+Possible actions:
+- Accept terms
+- Fund escrow
+- Confirm delivery
+- Release funds
+- Open dispute
+- View payment details
+
+Never allow the frontend to bypass backend authorization or release conditions.
+
+## 8. M-Pesa payment experience
+
+Design a polished M-Pesa payment flow.
+
+Include:
+
+- Phone number input
+- Amount confirmation
+- STK Push initiation state
+- Waiting for payment confirmation screen
+- Successful payment screen
+- Failed payment screen
+- Retry payment action
+
+Show:
+- Amount
+- Order reference
+- Checkout request reference where appropriate
+- M-Pesa receipt number after successful confirmation
+- Payment timestamp
+- Payment status
+
+Use statuses such as PENDING, SUCCESSFUL and FAILED only when mapped to actual backend values.
+
+Important:
+- Never treat a successful STK Push initiation as proof of payment.
+- Payment confirmation must come from the backend after validating the M-Pesa callback.
+- Do not expose raw callback payloads or internal payment credentials.
+
+## 9. Wallet
+
+Design a wallet interface with:
+
+- Available balance
+- Held balance
+- Wallet transaction history
+- Deposits
+- Withdrawals
+- Transfers
+- Escrow funding
+- Refunds
+- Earnings
+
+Use a clean financial history table with:
+- Reference
+- Transaction type
+- Date
+- Amount
+- Status
+
+The ledger is the financial source of truth. Do not let the frontend directly modify wallet balances.
+
+## 10. Disputes
+
+Build a dispute management interface.
+
+User-facing features:
+- Open dispute
+- Select reason
+- Provide description
+- Upload supporting evidence
+- View dispute status
+- View resolution
+- View dispute history
+
+Support/admin interface:
+- Dispute queue
+- Filter by status
+- View transaction details
+- Review evidence
+- Record resolution
+- Record resolving administrator
+
+Possible resolutions:
+- Refund buyer
+- Release funds to seller
+- Split funds
+
+Show an informative dispute timeline.
+
+## 11. User profile and KYC
+
+Create:
+- Profile information
+- Phone number
+- Display name
+- Verification tier
+- Verification status
+- Security settings
+- Login security information
+
+Clearly explain which features require additional verification.
+
+Never display sensitive identification numbers unnecessarily.
+
+## 12. Admin dashboard
+
+Build a separate administrative workspace.
+
+Overview cards:
+- Total users
+- Total escrows
+- Active escrows
+- Total funded volume
+- Pending M-Pesa payments
+- Open disputes
+- Completed transactions
+
+Admin pages:
+- User management
+- Escrow management
+- Payment monitoring
+- Ledger transaction viewer
+- Dispute management
+- Webhook event monitoring
+- Audit log viewer
+- Timer / deadline monitoring
+
+Financial screens must show transaction references, debit and credit postings, currency and timestamps.
+
+The admin interface must not provide arbitrary balance-editing controls. Financial adjustments must use authorized backend operations and auditable ledger transactions.
+
+## 13. API integration architecture
+
+Keep the frontend separate from the backend.
+
+Use a centralized API service layer with:
+- Configurable API base URL
+- Authentication token handling
+- Consistent error handling
+- Loading states
+- Request cancellation where appropriate
+- Pagination support
+- Idempotency keys for financial actions
+- Typed response models if TypeScript is used
+
+Previously discussed proposed escrow endpoints:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | /v1/escrows | Create escrow |
+| GET | /v1/escrows/:id | Retrieve escrow |
+| POST | /v1/escrows/:id/fund | Initiate funding |
+| POST | /v1/escrows/:id/confirm-delivery | Confirm delivery |
+| POST | /v1/escrows/:id/release | Request release |
+| POST | /v1/escrows/:id/disputes | Open dispute |
+
+These routes are proposed integration references, not confirmed deployed endpoints.
+
+Do not invent additional API routes or assume undocumented request/response formats.
+
+For authentication, wallet, M-Pesa, profile, notifications, administration and dispute evidence, create clearly separated API service modules with configurable endpoint mappings. Keep unresolved routes explicitly marked as TODO until the actual backend API contract is supplied.
+
+## 14. Database-aware data model
+
+Design the interface around these existing Neon database entities:
+
+- users
+- refresh_tokens
+- wallets
+- orders
+- order_terms_versions
+- order_acceptances
+- ledger_accounts
+- ledger_transactions
+- ledger_postings
+- ledger_entries
+- mpesa_payments
+- webhook_events
+- disputes
+- dispute_evidence
+- audit_log
+- timers
+
+Respect these relationships:
+
+- An order has a payer and payee.
+- An order can have multiple terms versions.
+- Both parties accept agreement versions.
+- An order can have payment records.
+- An order can have a dispute.
+- A dispute can have multiple evidence records.
+- Wallets belong to users.
+- Ledger postings reference ledger accounts and ledger transactions.
+- Ledger transactions can reference orders and M-Pesa payments.
+- Webhook events may reference orders.
+
+Do not invent database fields that do not exist. Additional UI-only derived values must be clearly distinguished from persisted backend fields.
+
+## 15. Interaction and UX requirements
+
+Every screen must include:
+- Loading state
+- Empty state
+- Error state
+- Success feedback
+- Confirmation for irreversible actions
+- Disabled states when actions are unavailable
+
+Use realistic sample data in the design preview, but clearly separate mock data from live API data.
+
+Use reusable components:
+- EscrowCard
+- TransactionTimeline
+- BalanceCard
+- PaymentStatus
+- DisputeCard
+- TermsAcceptance
+- ActivityFeed
+- DataTable
+- ConfirmationModal
+- EmptyState
+- LoadingSkeleton
+
+## 16. Final design objective
+
+The finished product should feel like a serious, launch-ready Kenyan escrow fintech platform.
+
+Prioritize trust, financial clarity, transaction transparency and a smooth buyer/seller experience.
+
+The buyer should always understand where their money is.
+
+The seller should always understand what conditions must be met before receiving payment.
+
+The platform administrator should have clear operational visibility without compromising accounting integrity.
+
+Do not build a static landing page only. Design the complete authenticated application, its transaction workflows and its administrative workspace.
