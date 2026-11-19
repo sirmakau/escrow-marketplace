@@ -5,7 +5,9 @@ node_modules/
 dist/
 client/dist/
 
-# Environment / secrets
+# Environment / secrets (one per app)
+server/.env
+client/.env
 .env
 .env.local
 .env.*.local

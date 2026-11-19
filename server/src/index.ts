@@ -58,12 +58,13 @@ app.use(cors({
 
 // 5. Front end (served before the API rate limiter so page loads don't
 //    consume the 100-request budget). The React build from `client/dist` wins
-//    when present; the legacy static console in `public/` is the fallback.
-const projectRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const clientDist = path.join(projectRoot, 'client', 'dist');
+//    when present; the legacy static console in `server/public/` is the fallback.
+const serverRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const repoRoot = path.join(serverRoot, '..');
+const clientDist = path.join(repoRoot, 'client', 'dist');
 const clientIndex = path.join(clientDist, 'index.html');
 const clientBuilt = fs.existsSync(clientIndex);
-app.use(express.static(clientBuilt ? clientDist : path.join(projectRoot, 'public')));
+app.use(express.static(clientBuilt ? clientDist : path.join(serverRoot, 'public')));
 
 // 6. Rate limiting
 const globalLimiter = rateLimit({

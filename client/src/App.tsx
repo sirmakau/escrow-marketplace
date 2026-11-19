@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import {
-  api,
-  ApiError,
-  refreshProfile,
-  sessionFor,
-  signIn,
-  signOut,
-} from './api';
+import { api, apiUrl, refreshProfile, signIn, signOut } from './api';
 import { displayNameFor, money, sleep } from './format';
 import {
   activeSession,
@@ -96,7 +89,7 @@ export function App() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/health');
+        const res = await fetch(apiUrl('/health'));
         const body = await res.json();
         setHealth(`${body.status} · ${body.mode} mode`);
       } catch {

@@ -6,9 +6,10 @@
 
 import { beforeAll, vi } from 'vitest';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'node:url';
 
-// Load test env
-dotenv.config({ path: '.env.example' });
+// Load the server's example env (tests override the values they need below).
+dotenv.config({ path: fileURLToPath(new URL('../.env.example', import.meta.url)) });
 process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/escrow_test';
 process.env.MPESA_MODE = 'mock';
 process.env.JWT_ACCESS_SECRET = 'a'.repeat(32);

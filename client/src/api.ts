@@ -16,6 +16,13 @@ import {
   upsertSession,
 } from './store';
 
+/** Optional API origin from client/.env; empty means same origin/proxy. */
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '');
+
+export function apiUrl(path: string): string {
+  return `${API_BASE}${path}`;
+}
+
 export class ApiError extends Error {
   status: number;
   code?: string;
@@ -41,7 +48,7 @@ interface RequestOptions {
 
 async function refreshSession(session: Session): Promise<boolean> {
   try {
-    const res = await fetch('/api/auth/refresh', {
+    const res = await fetch(apiUrl('/api/auth/refresh'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken: session.refreshToken }),
@@ -71,7 +78,7 @@ export async function api<T = unknown>(path: string, opts: RequestOptions = {}):
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (auth && session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
 
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,

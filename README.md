@@ -9,7 +9,7 @@ routes → controllers (= routes + services) → repositories → Neon (Postgres
 ```
 
 ```
-src/
+server/src/
 ├── config/          # Environment validation with Zod
 ├── middleware/       # request-id, pino-http, helmet, cors, rate-limit,
 │                    # validate, authenticate, authorize, requireOrderParty,
@@ -135,8 +135,9 @@ SYSTEM → releasePayment()
 git clone <repo>
 cd escrow-marketplace
 
-cp .env.example .env
-# Edit .env with your values (DATABASE_URL, secrets, etc.)
+cp server/.env.example server/.env
+cp client/.env.example client/.env
+# Edit server/.env with your values (DATABASE_URL, secrets, etc.)
 
 npm install
 npm run migrate    # Push schema to database
@@ -171,6 +172,9 @@ The test console is a React + Vite app in `client/`. In development, run
 `npm run dev` and `npm run dev:client` together and open http://localhost:5173.
 In production, `npm run build` writes the bundle to `client/dist`, which the
 Express server serves directly (with SPA fallback) at http://localhost:3000.
+
+Each app has its own env file: `server/.env` (database, JWT, M-Pesa) and
+`client/.env` (only public `VITE_*` values, such as `VITE_API_BASE_URL`).
 
 ### API Endpoints
 

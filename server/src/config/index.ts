@@ -1,6 +1,12 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import dotenv from 'dotenv';
-dotenv.config();
+
+// Server credentials live in server/.env, independent of client env files.
+dotenv.config({
+  path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '.env'),
+});
 
 const hexMin32 = z.string().min(32);
 const e164Phone = z.string().regex(/^\+2547\d{8}$/);
