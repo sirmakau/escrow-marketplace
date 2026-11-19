@@ -289,6 +289,21 @@ released product has no B2C initiator credentials or certificate yet, fill
 `MPESA_PRODUCTION_INITIATOR_*` and `MPESA_PRODUCTION_CERT_PEM` (PEM contents;
 `\n` escapes are accepted) before switching.
 
+For production Daraja traffic, set these Render variables before deploying:
+
+```text
+MPESA_MODE=production
+MPESA_CALLBACK_BASE_URL=https://escrow-marketplace-8ndh.onrender.com
+MPESA_PRODUCTION_CONSUMER_KEY=...
+MPESA_PRODUCTION_CONSUMER_SECRET=...
+MPESA_PRODUCTION_SHORTCODE=...
+MPESA_PRODUCTION_PASSKEY=...
+```
+
+Keep the credential values in Render's environment settings or another secret
+manager; do not commit them to `.env` files or source control. The server
+selects `MPESA_PRODUCTION_*` only when `MPESA_MODE=production`.
+
 Each environment still needs a public HTTPS callback URL. If sandbox and
 production run as separate Render services, set `MPESA_CALLBACK_BASE_URL` to each
 service's own URL. Production certificate encryption uses
