@@ -1,0 +1,22 @@
+import { Request, Response, NextFunction } from 'express';
+import { ZodSchema, ZodError } from 'zod';
+import { AppError } from '../utils/helpers.js';
+
+type ValidationTarget = 'body' | 'query' | 'params';
+
+export function validate(schema: ZodSchema, source: ValidationTarget = 'body') {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    try {
+      const data = schema.parse(req[source]);
+      // Replace with parsed (and transformed) data
+      (req as any)[source] = data;
+      next();
+    } catch (err) {
+      if (err instanceof ZodError) {
+        next(new AppError('VALIDATION_ERROR', 'Validation failed', 400, err.errors));
+      } else {
+        next(err);
+      }
+    }
+  };
+}
