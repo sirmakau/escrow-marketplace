@@ -22,6 +22,9 @@ server/*.txt
 prompt.txt
 new.txt
 
+# AI coding agent workspace
+freebuff/
+
 # Editor / OS
 .DS_Store
 .idea/
