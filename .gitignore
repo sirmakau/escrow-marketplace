@@ -20,7 +20,7 @@ error.txt
 errorrender.txt
 server/*.txt
 prompt.txt
-*.txt
+new.txt
 
 # Editor / OS
 .DS_Store

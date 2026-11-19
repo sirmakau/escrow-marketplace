@@ -1,10 +1,38 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BadgeCheck, Lock, LogOut, ShieldCheck, Smartphone, UserRound } from 'lucide-react';
+import { BadgeCheck, CheckCircle, Copy, Lock, LogOut, ShieldCheck, Smartphone, UserRound } from 'lucide-react';
 import { signOut } from '../api';
 import { Card, ErrorBanner, PageHeader, Skeleton } from '../components/ui';
 import { formatDate } from '../format';
 import { useEscrows } from '../lib/escrows';
 import { activeSession, useAppState } from '../store';
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // No-op on clipboard failure.
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="copy-btn"
+      onClick={handleCopy}
+      aria-label="Copy account ID"
+      title="Copy account ID"
+    >
+      {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
+      <span>{copied ? 'Copied' : 'Copy'}</span>
+    </button>
+  );
+}
 
 const TIERS = [
   {
@@ -87,6 +115,15 @@ export function Profile() {
                     <ShieldCheck size={14} /> Member since
                   </dt>
                   <dd>{formatDate(user?.createdAt)}</dd>
+                </div>
+                <div>
+                  <dt>
+                    <UserRound size={14} /> Account ID
+                  </dt>
+                  <dd>
+                    <span className="mono">{user?.id}</span>
+                    {user?.id && <CopyButton value={user.id} />}
+                  </dd>
                 </div>
               </dl>
             </div>
