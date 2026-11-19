@@ -36,7 +36,7 @@ router.post('/', authenticate, requireKycTier(1), validate(createOrderSchema), a
 // Get order
 router.get('/:orderId', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const order = await ordersService.getOrder(param(req, 'orderId'), req.user!.id);
+    const order = await ordersService.getOrder(param(req, 'orderId'), req.user!.id, req.user!.role);
     res.json({ data: order });
   } catch (err) { next(err); }
 });

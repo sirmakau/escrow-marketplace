@@ -216,6 +216,12 @@ export function StaffDisputeQueue({ onChanged }: { onChanged?: () => void }) {
 
                 {(dispute.status === 'OPEN' || dispute.status === 'IN_REVIEW') && (
                   <div className="dispute-actions">
+                    <Link
+                      to={`/escrows/${dispute.orderId}`}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      View escrow
+                    </Link>
                     <select
                       value={resolutions[dispute.id] ?? 'REFUND_PAYER'}
                       onChange={(e) =>

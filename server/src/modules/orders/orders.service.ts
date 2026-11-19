@@ -316,16 +316,15 @@ async function transition(orderId: string, userId: string, targetState: string) 
   });
 }
 
-/** Get order details (used by both parties and admin) */
-export async function getOrder(orderId: string, userId: string) {
+/** Get order details (used by both parties and staff) */
+export async function getOrder(orderId: string, userId: string, role?: string) {
   const [order] = await db.select().from(schema.orders)
     .where(eq(schema.orders.id, orderId))
     .limit(1);
   if (!order) throw new AppError('NOT_FOUND', 'Order not found', 404);
 
-  // Any user can view if they're a party or admin/support
-  // For now, only parties
-  if (order.payerId !== userId && order.payeeId !== userId && userId !== 'admin') {
+  const isStaff = role === 'admin' || role === 'support';
+  if (order.payerId !== userId && order.payeeId !== userId && !isStaff) {
     throw new AppError('FORBIDDEN', 'Not a party to this order', 403);
   }
 

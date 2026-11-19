@@ -20,7 +20,7 @@ const router = Router();
 
 /**
  * Subscribe to order state changes via SSE.
- * Authenticated; caller must be a party to the order.
+ * Authenticated; caller must be a party to the order or staff.
  */
 router.get('/orders/:orderId', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -32,7 +32,8 @@ router.get('/orders/:orderId', authenticate, async (req: Request, res: Response,
     if (!order) {
       return res.status(404).json({ error: { message: 'Order not found' } });
     }
-    if (order.payerId !== userId && order.payeeId !== userId && req.user!.role !== 'admin') {
+    const isStaff = req.user!.role === 'admin' || req.user!.role === 'support';
+    if (order.payerId !== userId && order.payeeId !== userId && !isStaff) {
       return res.status(403).json({ error: { message: 'Not a party to this order' } });
     }
 
