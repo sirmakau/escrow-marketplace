@@ -142,11 +142,22 @@ export { app };
 // ─── Start server (only when run directly, not in tests) ──────────────────
 const isDirectRun = process.argv[1]?.includes('index');
 if (isDirectRun) {
-  app.listen(config.PORT, () => {
+  const server = app.listen(config.PORT, () => {
     logger.info({
       port: config.PORT,
       mode: config.MPESA_MODE,
       env: config.NODE_ENV,
     }, 'Escrow marketplace API started');
+  });
+
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err && err.code === 'EADDRINUSE') {
+      logger.error({ port: config.PORT }, `Port ${config.PORT} is already in use`);
+      server.close(() => {
+        process.exit(1);
+      });
+      return;
+    }
+    throw err;
   });
 }
