@@ -12,6 +12,7 @@
     "migrate": "drizzle-kit push",
     "migrate:make": "drizzle-kit generate",
     "seed": "tsx src/db/seed.ts",
+    "seed:live": "tsx src/db/seed-live.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

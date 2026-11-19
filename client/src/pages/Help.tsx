@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, CircleHelp, Mail, MessageSquare, ShieldCheck, Smartphone } from 'lucide-react';
-import { Card, PageHeader } from '../components/ui';
+import { BookOpen, CircleHelp, ExternalLink, LayoutDashboard, Mail, MessageSquare, ReceiptText, ShieldCheck, Smartphone, Wallet as WalletIcon } from 'lucide-react';
+import { Card, PageHeader, StatCard } from '../components/ui';
 
 const FAQS = [
   {
@@ -38,6 +38,39 @@ export function Help() {
       />
 
       <div className="dashboard-grid">
+        <Card title="Current status" className="span-2">
+          <div className="stats-grid">
+            <StatCard
+              label="Backend"
+              value="Deployed"
+              hint="Render web service · rootDir: server"
+              icon={<LayoutDashboard size={16} />}
+              tone="emerald"
+            />
+            <StatCard
+              label="M-Pesa mode"
+              value="Sandbox"
+              hint="Change MPESA_MODE in the dashboard to go live"
+              icon={<ReceiptText size={16} />}
+              tone="navy"
+            />
+            <StatCard
+              label="Callback URL"
+              value="https://escrow-marketplace-8ndh.onrender.com/api/payments/mpea/stk-callback"
+              hint="Set in the Daraja app under STK Push"
+              icon={<Smartphone size={16} />}
+              tone="amber"
+            />
+            <StatCard
+              label="Frontend"
+              value="Vercel"
+              hint="https://escrow-marketplace-ke.vercel.app"
+              icon={<WalletIcon size={16} />}
+              tone="emerald"
+            />
+          </div>
+        </Card>
+
         <Card title="How escrow works" className="span-2">
           <ol className="how-list">
             <li>
@@ -62,6 +95,42 @@ export function Help() {
               </div>
             </li>
           </ol>
+        </Card>
+
+        <Card title="M-Pesa callback in Daraja">
+          <ul className="contact-list">
+            <li>
+              <ReceiptText size={16} aria-hidden="true" />
+              <div>
+                <strong>Callback URL</strong>
+                <span>
+                  Paste this into the Daraja app under STK Push → Call Back URL:
+                  <br />
+                  <code className="mono">https://escrow-marketplace-8ndh.onrender.com/api/payments/mpesa/stk-callback</code>
+                </span>
+              </div>
+            </li>
+            <li>
+              <ExternalLink size={16} aria-hidden="true" />
+              <div>
+                <strong>Sandbox testing</strong>
+                <span>
+                  Use the deployed backend directly.
+                  A local tunnel is not required now that the callback URL is public HTTPS.
+                </span>
+              </div>
+            </li>
+            <li>
+              <Mail size={16} aria-hidden="true" />
+              <div>
+                <strong>Credentials</strong>
+                <span>
+                  Sandbox consumer key/secret, shortcode, passkey and initiator credentials
+                  come from the Safaricom Developer Portal and are set as env vars on Render.
+                </span>
+              </div>
+            </li>
+          </ul>
         </Card>
 
         <Card title="Contact support">
@@ -107,3 +176,4 @@ export function Help() {
     </>
   );
 }
+

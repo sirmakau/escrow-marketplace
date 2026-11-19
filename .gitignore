@@ -14,7 +14,11 @@ client/.env
 
 # Logs and local noise
 *.log
+
+# Temporary scratch notes used while deploying/configuring
 error.txt
+errorrender.txt
+server/*.txt
 
 # Editor / OS
 .DS_Store
