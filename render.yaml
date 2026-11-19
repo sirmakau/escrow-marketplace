@@ -1,0 +1,69 @@
+# Render blueprint for the Express API.
+# Import this repository at https://dashboard.render.com/blueprints and fill the
+# sync:false values once. MPESA_MODE is intentionally not synced from this file:
+# set it to "sandbox" now and change it to "production" in the dashboard later.
+services:
+  - type: web
+    name: escrow-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: PLATFORM_FEE_PERCENT
+        value: "10"
+      - key: FUNDING_WINDOW_MIN
+        value: "30"
+      - key: REVIEW_WINDOW_HOURS
+        value: "48"
+
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+
+      # mock | sandbox | production — set in the dashboard, not synced.
+      - key: MPESA_MODE
+        sync: false
+      - key: MPESA_CALLBACK_BASE_URL
+        sync: false
+
+      # Sandbox credentials (used while MPESA_MODE=sandbox)
+      - key: MPESA_SANDBOX_CONSUMER_KEY
+        sync: false
+      - key: MPESA_SANDBOX_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_SANDBOX_SHORTCODE
+        sync: false
+      - key: MPESA_SANDBOX_PASSKEY
+        sync: false
+      - key: MPESA_SANDBOX_INITIATOR_NAME
+        sync: false
+      - key: MPESA_SANDBOX_INITIATOR_PASSWORD
+        sync: false
+
+      # Production credentials (ignored until MPESA_MODE=production)
+      - key: MPESA_PRODUCTION_CONSUMER_KEY
+        sync: false
+      - key: MPESA_PRODUCTION_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_PRODUCTION_SHORTCODE
+        sync: false
+      - key: MPESA_PRODUCTION_PASSKEY
+        sync: false
+      - key: MPESA_PRODUCTION_INITIATOR_NAME
+        sync: false
+      - key: MPESA_PRODUCTION_INITIATOR_PASSWORD
+        sync: false
+      - key: MPESA_PRODUCTION_CERT_PEM
+        sync: false

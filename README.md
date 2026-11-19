@@ -241,6 +241,46 @@ Each app has its own env file: `server/.env` (database, JWT, M-Pesa) and
 - **KYC gating** — tier 0 = registration only, tier 1 = order creation
 - **Order party enforcement** — roles derived from DB, never from JWT payload
 
+## Deploying the Backend on Render
+
+The repository includes a `render.yaml` blueprint for the API (`rootDir: server`,
+health check at `/health`). Both M-Pesa credential sets live in the same service,
+so going live is a single variable change.
+
+1. In Render, choose **New → Blueprint**, connect this repository, and apply
+   `render.yaml`.
+2. Fill the prompted values:
+   - `DATABASE_URL` — your Neon pooled connection string (`sslmode=require`)
+   - `CORS_ORIGINS` — the deployed client origin(s), comma-separated
+   - `MPESA_MODE` — `sandbox`
+   - `MPESA_CALLBACK_BASE_URL` — `https://<your-service>.onrender.com`
+   - `MPESA_SANDBOX_*` — keys, shortcode, passkey and initiator credentials
+     from the [Safaricom Developer Portal](https://developer.safaricom.co.ke/)
+3. Deploy and confirm `https://<your-service>.onrender.com/health` returns
+   `{"status":"ok","mode":"sandbox"}`.
+4. Run the schema migration once against the production database:
+   ```bash
+   cd server
+   DATABASE_URL='postgresql://...' npm run migrate
+   ```
+
+Production credentials can be entered now under `MPESA_PRODUCTION_*`; they are
+ignored while `MPESA_MODE=sandbox`. When sandbox testing passes, change
+`MPESA_MODE` to `production` in the Render dashboard and redeploy. If the
+released product has no B2C initiator credentials or certificate yet, fill
+`MPESA_PRODUCTION_INITIATOR_*` and `MPESA_PRODUCTION_CERT_PEM` (PEM contents;
+`\n` escapes are accepted) before switching.
+
+Each environment still needs a public HTTPS callback URL. If sandbox and
+production run as separate Render services, set `MPESA_CALLBACK_BASE_URL` to each
+service's own URL. Production certificate encryption uses
+`MPESA_PRODUCTION_CERT_PEM` when set, otherwise `MPESA_CERT_PATH`.
+
+Auto-release timers run in `server/src/workers/index.ts`, which is a separate
+process. On Render, add a background worker with start command
+`node dist/workers/index.js` and the same environment variables; free web
+services also sleep when idle, which can delay M-Pesa callbacks.
+
 ## Moving to Production
 
 1. Set `MPESA_MODE=production`

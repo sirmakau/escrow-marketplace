@@ -169,9 +169,10 @@ class LiveDaraja {
     if (config.isSandbox) {
       return config.MPESA_INITIATOR_PASSWORD || '';
     }
-    // Production: encrypt with Safaricom public cert
+    // Production: encrypt with Safaricom public cert. Prefer PEM supplied via
+    // env (Render) and fall back to a certificate file on disk.
     try {
-      const cert = fs.readFileSync(config.MPESA_CERT_PATH, 'utf-8');
+      const cert = config.MPESA_CERT_PEM ?? fs.readFileSync(config.MPESA_CERT_PATH, 'utf-8');
       const publicKey = crypto.createPublicKey(cert);
       const encrypted = crypto.publicEncrypt(publicKey, Buffer.from(config.MPESA_INITIATOR_PASSWORD || ''));
       return encrypted.toString('base64');
