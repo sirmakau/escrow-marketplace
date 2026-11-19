@@ -94,6 +94,15 @@ function validateHttpsUrl(value: string | undefined, name: string, required: boo
   return value;
 }
 
+export function normalizeCallbackBaseUrl(value: string): string {
+  return value
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api\/payments\/mpesa\/stk-callback$/, '')
+    .replace(/\/api\/payments\/mpesa\/b2c-callback$/, '')
+    .replace(/\/api\/payments\/mpesa\/b2c-timeout$/, '');
+}
+
 export function resolveMpesaConfig(raw: RawEnv): MpesaConfig {
   if (raw.MPESA_MODE === 'mock') {
     return {
@@ -118,7 +127,8 @@ export function resolveMpesaConfig(raw: RawEnv): MpesaConfig {
   const certPath = path.isAbsolute(configuredCertPath)
     ? configuredCertPath
     : path.resolve(serverRoot, configuredCertPath);
-  const callbackBaseUrl = validateHttpsUrl(raw.MPESA_CALLBACK_BASE_URL?.trim(), 'MPESA_CALLBACK_BASE_URL', true)!;
+  const callbackValue = validateHttpsUrl(raw.MPESA_CALLBACK_BASE_URL?.trim(), 'MPESA_CALLBACK_BASE_URL', true)!;
+  const callbackBaseUrl = normalizeCallbackBaseUrl(callbackValue);
 
   const missingStk = [
     ['CONSUMER_KEY', consumerKey],

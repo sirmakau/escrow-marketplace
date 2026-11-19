@@ -20,6 +20,17 @@ router.post(
   },
 );
 
+router.post(
+  '/reconcile/:orderId',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await paymentsService.reconcileFunding(param(req, 'orderId'), req.user!.id);
+      res.json({ data: result });
+    } catch (err) { next(err); }
+  },
+);
+
 // ─── STK Callback (public, no JWT) ───────────────────────────────────────
 router.post('/mpesa/stk-callback', async (req: Request, res: Response, next: NextFunction) => {
   try {

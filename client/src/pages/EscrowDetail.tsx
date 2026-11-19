@@ -624,6 +624,21 @@ function FundModal({
       for (let attempt = 0; attempt < STK_PROMPT_TIMEOUT_SECONDS * 1000 / STK_POLL_INTERVAL_MS; attempt += 1) {
         if (cancelled.current) return;
         await sleep(STK_POLL_INTERVAL_MS);
+        if (attempt > 0 && attempt % 5 === 0) {
+          try {
+            const reconciliation = await api<{ reconciled: boolean; state: string }>(
+              `/api/payments/reconcile/${order.id}`,
+              { method: 'POST', quiet: true },
+            );
+            if (reconciliation.state === 'FUNDED') {
+              setStage('confirmed');
+              await onConfirmed();
+              return;
+            }
+          } catch {
+            // Fall back to the existing order refresh below.
+          }
+        }
         const fresh = await api<OrderDetail>(`/api/orders/${order.id}`, { quiet: true });
         if (fresh.state === 'FUNDED') {
           setStage('confirmed');

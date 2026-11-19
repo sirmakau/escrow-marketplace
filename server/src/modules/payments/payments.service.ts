@@ -22,6 +22,7 @@ export async function initiateFunding(orderId: string, userId: string) {
     if (order.payerId !== userId) {
       throw new AppError('FORBIDDEN', 'Only the payer can fund', 403);
     }
+
     if (order.state !== 'ACCEPTED') {
       throw new AppError('ORDER_STATE_INVALID', `Cannot fund in state ${order.state}`, 409);
     }
@@ -61,6 +62,48 @@ export async function initiateFunding(orderId: string, userId: string) {
 
     return { paymentId: payment.id, checkoutRequestId: stkResponse.CheckoutRequestID };
   });
+}
+
+export async function reconcileFunding(orderId: string, userId: string) {
+  const [order] = await db.select()
+    .from(schema.orders)
+    .where(eq(schema.orders.id, orderId))
+    .limit(1);
+
+  if (!order) throw new AppError('NOT_FOUND', 'Order not found', 404);
+  if (order.payerId !== userId) {
+    throw new AppError('FORBIDDEN', 'Only the payer can reconcile funding', 403);
+  }
+
+  const [payment] = await db.select()
+    .from(schema.mpesaPayments)
+    .where(and(
+      eq(schema.mpesaPayments.orderId, orderId),
+      eq(schema.mpesaPayments.type, 'stk_push'),
+      eq(schema.mpesaPayments.status, 'PENDING'),
+    ))
+    .orderBy(schema.mpesaPayments.createdAt)
+    .limit(1);
+
+  if (!payment?.checkoutRequestId) {
+    return { reconciled: false, state: order.state };
+  }
+
+  const result = await getDaraja().stkQuery(payment.checkoutRequestId);
+  if (result.ResultCode !== 0) {
+    return { reconciled: false, state: order.state };
+  }
+
+  await handleStkCallback({
+    ...result,
+    MpesaReceiptNumber: payment.mpesaReceiptNumber ?? undefined,
+  });
+
+  const [freshOrder] = await db.select()
+    .from(schema.orders)
+    .where(eq(schema.orders.id, orderId))
+    .limit(1);
+  return { reconciled: freshOrder?.state === 'FUNDED', state: freshOrder?.state ?? order.state };
 }
 
 /**

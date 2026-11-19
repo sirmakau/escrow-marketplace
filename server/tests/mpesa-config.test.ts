@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { resolveMpesaConfig, serverRoot, type MpesaEnvironment } from '../src/config/env.js';
+import { normalizeCallbackBaseUrl, resolveMpesaConfig, serverRoot, type MpesaEnvironment } from '../src/config/env.js';
 import { generateB2cSecurityCredential, MockDaraja } from '../src/integrations/mpesa/daraja.js';
 
 function environment(overrides: Partial<MpesaEnvironment> = {}): MpesaEnvironment {
@@ -58,6 +58,12 @@ function configuredProduction(overrides: Partial<MpesaEnvironment> = {}) {
 }
 
 describe('M-Pesa environment readiness', () => {
+  it('normalizes full callback URLs to a callback base origin', () => {
+    expect(normalizeCallbackBaseUrl(
+      'https://escrow-marketplace-8ndh.onrender.com/api/payments/mpesa/stk-callback',
+    )).toBe('https://escrow-marketplace-8ndh.onrender.com');
+  });
+
   it('allows mock mode without M-Pesa credentials', () => {
     const config = resolveMpesaConfig(environment());
     expect(config.isStkPushEnabled).toBe(true);
