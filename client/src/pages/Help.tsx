@@ -56,7 +56,7 @@ export function Help() {
             />
             <StatCard
               label="Callback URL"
-              value="https://escrow-marketplace-8ndh.onrender.com/api/payments/mpea/stk-callback"
+              value="https://escrow-marketplace-8ndh.onrender.com/api/payments/mpesa/stk-callback"
               hint="Set in the Daraja app under STK Push"
               icon={<Smartphone size={16} />}
               tone="amber"

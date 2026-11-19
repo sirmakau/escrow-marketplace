@@ -19,6 +19,7 @@ client/.env
 error.txt
 errorrender.txt
 server/*.txt
+prompt.txt
 
 # Editor / OS
 .DS_Store

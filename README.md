@@ -204,6 +204,24 @@ which the Express server serves directly (with SPA fallback) at http://localhost
 
 Each app has its own env file: `server/.env` (database, JWT, M-Pesa) and
 `client/.env` (only public `VITE_*` values, such as `VITE_API_BASE_URL`).
+For local development, leave `VITE_API_BASE_URL` empty so Vite proxies `/api`
+to `http://localhost:3000`. For a separately deployed Vercel frontend, set it
+to the Render **backend** origin (for example,
+`https://escrow-marketplace-8ndh.onrender.com`), not to the Vercel frontend
+URL itself.
+
+### Deploying the frontend on Vercel
+
+Create a Vercel project with `client/` as its root directory and set this
+Production environment variable:
+
+```text
+VITE_API_BASE_URL=https://escrow-marketplace-8ndh.onrender.com
+```
+
+Set the same Vercel site URL in the Render service's `CORS_ORIGINS` value.
+The `client/vercel.json` rewrite keeps React Router routes working when a
+deployed page is refreshed directly.
 
 ### API Endpoints
 
