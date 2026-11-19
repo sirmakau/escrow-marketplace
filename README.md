@@ -111,6 +111,10 @@ PAYER → POST /api/payments/fund/:orderId
                  → schedule review deadline timer
 ```
 
+The client polls for a verified funding callback for up to 90 seconds after
+an STK Push. If no confirmation arrives, the prompt is treated as expired in
+the UI; the backend callback remains the source of truth.
+
 ### B2C Payout Flow
 
 ```

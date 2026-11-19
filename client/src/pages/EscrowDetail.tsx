@@ -47,6 +47,8 @@ import type { OrderDetail } from '../types';
 
 type DialogKind = 'cancel' | 'release' | null;
 type FundStage = 'idle' | 'starting' | 'waiting' | 'confirmed' | 'timeout' | 'error';
+const STK_PROMPT_TIMEOUT_SECONDS = 90;
+const STK_POLL_INTERVAL_MS = 3000;
 
 export function EscrowDetail() {
   const { id } = useParams<{ id: string }>();
@@ -619,9 +621,9 @@ function FundModal({
       setCheckout(result.checkoutRequestId);
       setStage('waiting');
 
-      for (let attempt = 0; attempt < 20; attempt += 1) {
+      for (let attempt = 0; attempt < STK_PROMPT_TIMEOUT_SECONDS * 1000 / STK_POLL_INTERVAL_MS; attempt += 1) {
         if (cancelled.current) return;
-        await sleep(3000);
+        await sleep(STK_POLL_INTERVAL_MS);
         const fresh = await api<OrderDetail>(`/api/orders/${order.id}`, { quiet: true });
         if (fresh.state === 'FUNDED') {
           setStage('confirmed');
@@ -714,7 +716,8 @@ function FundModal({
             <strong>No confirmation yet</strong>
             <p>
               The payment has not been confirmed by M-Pesa. Check your phone or wait a moment and
-              try again. Do not send a second payment until this request has expired.
+              try again. The prompt was cancelled after {STK_PROMPT_TIMEOUT_SECONDS} seconds. Do
+              not send a second payment until this request has expired.
             </p>
           </div>
         </div>
