@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node --import tsx dist/index.js",
+    "start": "node dist/index.js",
     "build": "tsc",
     "worker": "tsx watch src/workers/index.ts",
     "demo": "tsx src/demo/index.ts",
