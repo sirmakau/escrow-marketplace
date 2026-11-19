@@ -27,7 +27,7 @@ src/
 │   └── mpesa/       # Daraja (mock | sandbox | production) adapter
 ├── workers/         # Timer polling, reconciliation, auto-release
 ├── db/
-│   ├── schema/      # Drizzle ORM schema (15 tables)
+│   ├── schema/      # Drizzle ORM schema (16 tables)
 │   ├── migrations/  # Generated migrations
 │   ├── client.ts    # DB connection & helpers
 │   └── seed.ts      # Test users + wallets
